@@ -1,8 +1,10 @@
 import { RemovalPolicy, Stack, StackProps } from "aws-cdk-lib";
 import {
+  Cors,
   LambdaIntegration,
   LambdaRestApi,
   MethodLoggingLevel,
+  ResponseType,
   RestApi,
 } from "aws-cdk-lib/aws-apigateway";
 import {
@@ -251,8 +253,24 @@ export class PlanningPokerAppBackStack extends Stack {
         metricsEnabled: true,
         stageName: "dev",
       },
+      defaultCorsPreflightOptions: {
+        allowOrigins: Cors.ALL_ORIGINS,
+        allowMethods: Cors.ALL_METHODS,
+        allowHeaders: Cors.DEFAULT_HEADERS.concat([
+          "access-control-allow-origin",
+          "x-requested-with",
+        ]),
+      },
     });
-    const connections = connectionApi.root.addResource("connections");
-    connections.addMethod("GET");
+    const connection = connectionApi.root.addResource("connection");
+    connection.addMethod(
+      "GET",
+      new LambdaIntegration(connectionHandler, { proxy: true })
+    );
+    const connectionWithId = connection.addResource(`{id}`);
+    connectionWithId.addMethod(
+      "PUT",
+      new LambdaIntegration(connectionHandler, { proxy: true })
+    );
   }
 }

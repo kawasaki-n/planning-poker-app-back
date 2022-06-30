@@ -7,7 +7,7 @@ import * as AWS from "aws-sdk";
 
 const apigateway = (domainName: any, stage: any): AWS.ApiGatewayManagementApi =>
   new AWS.ApiGatewayManagementApi({ endpoint: `${domainName}/${stage}` });
-const client = new AWS.DynamoDB.DocumentClient();
+const client = new AWS.DynamoDB.DocumentClient({ convertEmptyValues: true });
 
 export const handler: Handler = async (
   event: APIGatewayProxyEvent

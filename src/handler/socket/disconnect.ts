@@ -7,7 +7,7 @@ import * as AWS from "aws-sdk";
 
 const apigateway = (domainName: any, stage: any): AWS.ApiGatewayManagementApi =>
   new AWS.ApiGatewayManagementApi({ endpoint: `${domainName}/${stage}` });
-const client = new AWS.DynamoDB.DocumentClient();
+const client = new AWS.DynamoDB.DocumentClient({ convertEmptyValues: true });
 
 export const handler: Handler = async (
   event: APIGatewayProxyEvent
@@ -28,18 +28,18 @@ export const handler: Handler = async (
     await client.delete(params).promise();
 
     const ret = await client.scan({ TableName: tableName }).promise();
-    const connectionIds = await Promise.all(ret.Items || []);
-    console.log("connectionIds ", connectionIds);
+    const connections = await Promise.all(ret.Items || []);
+    console.log("connections ", connections);
 
     await Promise.all(
-      connectionIds.map(async ({ connectionId }) => {
+      connections.map(async ({ connectionId }) => {
         try {
           const sendParams: AWS.ApiGatewayManagementApi.Types.PostToConnectionRequest =
             {
               ConnectionId: connectionId,
               Data: JSON.stringify({
                 connectionId,
-                connectionIds,
+                connections,
               }),
             };
           return await apigateway(
