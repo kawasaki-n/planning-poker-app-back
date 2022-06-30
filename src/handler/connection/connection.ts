@@ -5,6 +5,7 @@ import {
 } from "aws-lambda";
 import * as AWS from "aws-sdk";
 import * as utils from "../util";
+import * as service from "../../service/connection";
 
 const client = new AWS.DynamoDB.DocumentClient({ convertEmptyValues: true });
 
@@ -21,36 +22,32 @@ export const handler: Handler = async (
     }
 
     if (method === "GET") {
-      const params = {
-        TableName: tableName,
-      };
-
-      const ret = await client.scan(params).promise();
+      const ret = await service.loadConnections(tableName);
       return utils.successResult(ret);
     } else if (method === "PUT") {
       if (event.body == null) {
         return utils.errorResult({ message: `event.body is null` });
       }
-      if (!id) {
-        return utils.errorResult({ message: `id is required!` });
-      }
 
       const payload = JSON.parse(event.body);
+      if (id) {
+        const ret = await service.updateConnection(tableName, id, payload);
+        return utils.successResult(ret);
+      }
 
-      const params = {
-        TableName: tableName,
-        Key: { connectionId: id },
-        ExpressionAttributeNames: {
-          "#v": "value",
-        },
-        ExpressionAttributeValues: {
-          ":newValue": payload.value,
-        },
-        UpdateExpression: "SET #v = :newValue",
-        ReturnValues: "UPDATED_NEW",
-      };
-      const ret = await client.update(params).promise();
-      return utils.successResult(ret);
+      const connections = await service.loadConnections(tableName);
+      if (connections.Items) {
+        await Promise.all(
+          connections.Items.map(async (connection) => {
+            return await service.updateConnection(
+              tableName,
+              connection.connectionId,
+              payload
+            );
+          })
+        );
+      }
+      return utils.successResult({});
     }
 
     return utils.errorResult({ message: `unexpected method = ${method}` });

@@ -262,11 +262,18 @@ export class PlanningPokerAppBackStack extends Stack {
         ]),
       },
     });
+    connectionApi.applyRemovalPolicy(RemovalPolicy.DESTROY);
+
     const connection = connectionApi.root.addResource("connection");
     connection.addMethod(
       "GET",
       new LambdaIntegration(connectionHandler, { proxy: true })
     );
+    connection.addMethod(
+      "PUT",
+      new LambdaIntegration(connectionHandler, { proxy: true })
+    );
+
     const connectionWithId = connection.addResource(`{id}`);
     connectionWithId.addMethod(
       "PUT",
