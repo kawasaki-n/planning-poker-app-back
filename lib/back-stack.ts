@@ -23,6 +23,7 @@ import {
 } from "aws-cdk-lib/aws-iam";
 import { Runtime } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
+import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
 import { Construct } from "constructs";
 
 export class PlanningPokerAppBackStack extends Stack {
@@ -60,6 +61,11 @@ export class PlanningPokerAppBackStack extends Stack {
         },
       }
     );
+    new LogGroup(this, `${connectFunction.node.id}LogGroup`, {
+      logGroupName: `/aws/lambda/${connectFunction.functionName}`,
+      removalPolicy: RemovalPolicy.DESTROY,
+      retention: RetentionDays.ONE_YEAR,
+    });
     db.grantReadWriteData(connectFunction);
 
     const disconnectFunction = new NodejsFunction(
@@ -75,6 +81,11 @@ export class PlanningPokerAppBackStack extends Stack {
         },
       }
     );
+    new LogGroup(this, `${disconnectFunction.node.id}LogGroup`, {
+      logGroupName: `/aws/lambda/${disconnectFunction.functionName}`,
+      removalPolicy: RemovalPolicy.DESTROY,
+      retention: RetentionDays.ONE_YEAR,
+    });
     db.grantReadWriteData(disconnectFunction);
 
     const defaultFunction = new NodejsFunction(
@@ -90,6 +101,11 @@ export class PlanningPokerAppBackStack extends Stack {
         },
       }
     );
+    new LogGroup(this, `${defaultFunction.node.id}LogGroup`, {
+      logGroupName: `/aws/lambda/${defaultFunction.functionName}`,
+      removalPolicy: RemovalPolicy.DESTROY,
+      retention: RetentionDays.ONE_YEAR,
+    });
     db.grantReadWriteData(defaultFunction);
 
     const updateFunction = new NodejsFunction(
@@ -105,6 +121,11 @@ export class PlanningPokerAppBackStack extends Stack {
         },
       }
     );
+    new LogGroup(this, `${updateFunction.node.id}LogGroup`, {
+      logGroupName: `/aws/lambda/${updateFunction.functionName}`,
+      removalPolicy: RemovalPolicy.DESTROY,
+      retention: RetentionDays.ONE_YEAR,
+    });
     db.grantReadWriteData(updateFunction);
 
     const policy = new PolicyStatement({
@@ -241,6 +262,11 @@ export class PlanningPokerAppBackStack extends Stack {
         },
       }
     );
+    new LogGroup(this, `${connectionHandler.node.id}LogGroup`, {
+      logGroupName: `/aws/lambda/${connectionHandler.functionName}`,
+      removalPolicy: RemovalPolicy.DESTROY,
+      retention: RetentionDays.ONE_YEAR,
+    });
     db.grantReadWriteData(connectionHandler);
 
     const connectionApi = new LambdaRestApi(this, `${APP_NAME}RestApi`, {
