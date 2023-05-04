@@ -1,11 +1,11 @@
 import { RemovalPolicy, Stack, StackProps } from "aws-cdk-lib";
 import {
+  AccessLogFormat,
   Cors,
   LambdaIntegration,
   LambdaRestApi,
+  LogGroupLogDestination,
   MethodLoggingLevel,
-  ResponseType,
-  RestApi,
 } from "aws-cdk-lib/aws-apigateway";
 import {
   CfnApi,
@@ -269,6 +269,11 @@ export class PlanningPokerAppBackStack extends Stack {
     });
     db.grantReadWriteData(connectionHandler);
 
+    const apiLogGroup = new LogGroup(this, `${APP_NAME}RestApiAccessLogGroup`, {
+      logGroupName: `/aws/apigateway/${APP_NAME}RestApiAccessLog`,
+      removalPolicy: RemovalPolicy.DESTROY,
+      retention: RetentionDays.ONE_YEAR,
+    });
     const connectionApi = new LambdaRestApi(this, `${APP_NAME}RestApi`, {
       restApiName: `${APP_NAME}RestApi`,
       handler: connectionHandler,
@@ -278,6 +283,8 @@ export class PlanningPokerAppBackStack extends Stack {
         dataTraceEnabled: true,
         metricsEnabled: true,
         stageName: "dev",
+        accessLogDestination: new LogGroupLogDestination(apiLogGroup),
+        accessLogFormat: AccessLogFormat.clf(),
       },
       defaultCorsPreflightOptions: {
         allowOrigins: Cors.ALL_ORIGINS,
